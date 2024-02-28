@@ -72,6 +72,7 @@ namespace triton {
       #define REG_SPEC(UPPER_NAME, _1, _2, _3, _4, _5) \
       ID_REG_AARCH64_##UPPER_NAME,
       #define REG_SPEC_NO_CAPSTONE REG_SPEC
+      #define SYS_REG_SPEC REG_SPEC
       #include "triton/aarch64.spec"
 
       #define REG_SPEC(UPPER_NAME, _1, _2, _3, _4, _5) \
@@ -168,6 +169,20 @@ namespace triton {
         ID_CONDITION_VC,          //!< No overflow. V clear.
         ID_CONDITION_VS,          //!< Overflow. V set.
         ID_CONDITION_LAST_ITEM,   //!< must be the last item.
+      };
+
+      //! Vector arrangement specifier
+      enum vas_e {
+        ID_VAS_INVALID = 0, //!< invalid
+        ID_VAS_16B,         //!< 16 lanes, each containing an 8-bit element.
+        ID_VAS_8B,          //!< 8 lanes, each containing an 8-bit element.
+        ID_VAS_8H,          //!< 8 lanes, each containing a 16-bit element.
+        ID_VAS_4H,          //!< 4 lanes, each containing a 16-bit element.
+        ID_VAS_4S,          //!< 4 lanes, each containing a 32-bit element.
+        ID_VAS_2S,          //!< 2 lanes, each containing a 32-bit element.
+        ID_VAS_2D,          //!< 2 lanes, each containing a 64-bit element.
+        ID_VAS_1D,          //!< 1 lane containing a 64-bit element.
+        ID_VAS_LAST_ITEM,   //!< must be the last item.
       };
 
     /*! @} End of arm namespace */

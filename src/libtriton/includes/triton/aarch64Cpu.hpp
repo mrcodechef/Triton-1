@@ -67,6 +67,9 @@ namespace triton {
             //! Callbacks API
             triton::callbacks::Callbacks* callbacks;
 
+            //! Exclusive memory tags. Each address in this std::set is tagged as exclusive.
+            std::set<triton::uint64> exclusiveMemoryTags;
+
             //! Capstone context
             std::size_t handle;
 
@@ -219,6 +222,13 @@ namespace triton {
             //! Concrete value of spsr
             triton::uint8 spsr[triton::size::dword];
 
+            //! System registers
+            #define SYS_REG_SPEC(_, LOWER_NAME, _2, _3, _4, _5) \
+            triton::uint8 LOWER_NAME[triton::size::qword];
+            #define REG_SPEC(_1, _2, _3, _4, _5, _6)
+            #define REG_SPEC_NO_CAPSTONE(_1, _2, _3, _4, _5, _6)
+            #include "triton/aarch64.spec"
+
           public:
             //! Constructor.
             TRITON_EXPORT AArch64Cpu(triton::callbacks::Callbacks* callbacks=nullptr);
@@ -238,13 +248,20 @@ namespace triton {
             //! Returns true if regId is a scalar register.
             TRITON_EXPORT bool isScalarRegister(triton::arch::register_e regId) const;
 
+            //! Returns true if regId is a vector register.
+            TRITON_EXPORT bool isVectorRegister(triton::arch::register_e regId) const;
+
+            //! Returns true if regId is a system register.
+            TRITON_EXPORT bool isSystemRegister(triton::arch::register_e regId) const;
+
             /* Virtual pure inheritance ================================================= */
             TRITON_EXPORT bool isFlag(triton::arch::register_e regId) const;
             TRITON_EXPORT bool isRegister(triton::arch::register_e regId) const;
             TRITON_EXPORT bool isRegisterValid(triton::arch::register_e regId) const;
             TRITON_EXPORT bool isThumb(void) const;
-            TRITON_EXPORT bool isMemoryExclusiveAccess(void) const;
+            TRITON_EXPORT bool isMemoryExclusive(const triton::arch::MemoryAccess& mem) const;
             TRITON_EXPORT const std::unordered_map<triton::arch::register_e, const triton::arch::Register>& getAllRegisters(void) const;
+            TRITON_EXPORT const std::unordered_map<triton::uint64, triton::uint8, IdentityHash<triton::uint64>>& getConcreteMemory(void) const;
             TRITON_EXPORT const triton::arch::Register& getParentRegister(const triton::arch::Register& reg) const;
             TRITON_EXPORT const triton::arch::Register& getParentRegister(triton::arch::register_e id) const;
             TRITON_EXPORT const triton::arch::Register& getProgramCounter(void) const;
@@ -268,7 +285,7 @@ namespace triton {
             TRITON_EXPORT void setConcreteMemoryValue(triton::uint64 addr, triton::uint8 value, bool execCallbacks=true);
             TRITON_EXPORT void setConcreteRegisterValue(const triton::arch::Register& reg, const triton::uint512& value, bool execCallbacks=true);
             TRITON_EXPORT void setThumb(bool state);
-            TRITON_EXPORT void setMemoryExclusiveAccess(bool state);
+            TRITON_EXPORT void setMemoryExclusiveTag(const triton::arch::MemoryAccess& mem, bool tag);
             TRITON_EXPORT bool isConcreteMemoryValueDefined(const triton::arch::MemoryAccess& mem) const;
             TRITON_EXPORT bool isConcreteMemoryValueDefined(triton::uint64 baseAddr, triton::usize size=1) const;
             TRITON_EXPORT void clearConcreteMemoryValue(const triton::arch::MemoryAccess& mem);

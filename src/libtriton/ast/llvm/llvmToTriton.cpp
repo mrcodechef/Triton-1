@@ -36,6 +36,14 @@ namespace triton {
           if (call->getCalledFunction()->getName().find("llvm.bswap.i") != std::string::npos) {
             return this->actx->bswap(this->do_convert(call->getOperand(0)));
           }
+          else if (call->getCalledFunction()->getName().find("llvm.ctpop.i") != std::string::npos) {
+            auto oprnd = this->do_convert(call->getOperand(0));
+            auto node  = this->actx->bv(0, oprnd->getBitvectorSize());
+            for (triton::uint32 i = 0; i < oprnd->getBitvectorSize(); ++i) {
+              node = this->actx->bvadd(node, this->actx->zx(oprnd->getBitvectorSize() - 1, this->actx->extract(i, i, oprnd)));
+            }
+            return node;
+          }
           /* We symbolize the return of call */
           return this->var(instruction->getName().str(), instruction->getType()->getScalarSizeInBits());
         }
@@ -123,6 +131,12 @@ namespace triton {
             /* Final size */
             auto size = instruction->getType()->getIntegerBitWidth();
             auto node = this->do_convert(instruction->getOperand(0));
+
+            /* Handle the case where node is logical */
+            if (node->isLogical()) {
+              node = this->actx->ite(node, this->actx->bvtrue(), this->actx->bvfalse());
+            }
+
             /* Size of the child */
             auto csze = instruction->getOperand(0)->getType()->getIntegerBitWidth();
             return this->actx->sx(size - csze, node);
@@ -195,6 +209,12 @@ namespace triton {
             /* Final size */
             auto size = instruction->getType()->getIntegerBitWidth();
             auto node = this->do_convert(instruction->getOperand(0));
+
+            /* Handle the case where node is logical */
+            if (node->isLogical()) {
+              node = this->actx->ite(node, this->actx->bvtrue(), this->actx->bvfalse());
+            }
+
             /* Size of the child */
             auto csze = instruction->getOperand(0)->getType()->getIntegerBitWidth();
             return this->actx->zx(size - csze, node);

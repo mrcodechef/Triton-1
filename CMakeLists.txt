@@ -22,19 +22,20 @@ project(triton VERSION ${VERSION_MAJOR}.${VERSION_MINOR})
 # Define cmake options
 include(CMakeDependentOption)
 
-option(ASAN                 "Enable the ASAN linking"                  OFF)
-option(BITWUZLA_INTERFACE   "Use Bitwuzla as SMT solver"               OFF)
-option(BUILD_SHARED_LIBS    "Build a shared library"                   ON)
-option(GCOV                 "Enable code coverage"                     OFF)
-option(LLVM_INTERFACE       "Use LLVM for lifting"                     OFF)
-option(MSVC_STATIC          "Use statically-linked runtime library"    OFF)
-option(Z3_INTERFACE         "Use Z3 as SMT solver"                     ON)
-option(BOOST_INTERFACE      "Use Boost as multiprecision library"      ON)
+option(ASAN                              "Enable the ASAN linking"                         OFF)
+option(BITWUZLA_INTERFACE                "Use Bitwuzla as SMT solver"                      OFF)
+option(BUILD_SHARED_LIBS                 "Build a shared library"                          ON)
+option(GCOV                              "Enable code coverage"                            OFF)
+option(LLVM_INTERFACE                    "Use LLVM for lifting"                            OFF)
+option(MSVC_STATIC                       "Use statically-linked runtime library"           OFF)
+option(Z3_INTERFACE                      "Use Z3 as SMT solver"                            ON)
+option(BOOST_INTERFACE                   "Use Boost as multiprecision library"             ON)
+option(PYTHON_BINDINGS_AUTOCOMPLETE      "Generate an autocomplete stub file"              OFF)
 
 # Define cmake dependent options
-cmake_dependent_option(BUILD_EXAMPLES       "Build the examples"                            ON  BUILD_SHARED_LIBS OFF)
-cmake_dependent_option(ENABLE_TEST          "Do testing"                                    ON  BUILD_SHARED_LIBS OFF)
-cmake_dependent_option(PYTHON_BINDINGS      "Enable Python bindings"                        ON  BUILD_SHARED_LIBS OFF)
+cmake_dependent_option(BUILD_EXAMPLES   "Build the examples"            ON  BUILD_SHARED_LIBS OFF)
+cmake_dependent_option(ENABLE_TEST      "Do testing"                    ON  BUILD_SHARED_LIBS OFF)
+cmake_dependent_option(PYTHON_BINDINGS  "Enable Python bindings"        ON  BUILD_SHARED_LIBS OFF)
 
 #Enable ctest
 include(CTest)
@@ -45,16 +46,56 @@ add_custom_target(check
 
 if(PYTHON_BINDINGS)
     message(STATUS "Compiling with Python bindings")
+
+    if(NOT PYTHON_VERSION AND NOT PYTHON_EXECUTABLE)
+        # Find the python version the user has in the PATH
+        # This prevents an issue where an unexpected python version is used
+        # (eg the system/homebrew python in a virtual environment)
+        find_program(PYTHON_EXECUTABLE
+            NAMES python3 python
+            NO_PACKAGE_ROOT_PATH
+            NO_CMAKE_PATH
+            NO_CMAKE_ENVIRONMENT_PATH
+            NO_CMAKE_SYSTEM_PATH
+            NO_CMAKE_INSTALL_PREFIX
+            REQUIRED
+        )
+    endif()
+
+    if(PYTHON_EXECUTABLE)
+        # Make sure the specified python is not fully broken
+        execute_process(COMMAND ${PYTHON_EXECUTABLE} --version
+            RESULT_VARIABLE PYTHON_RESULT
+            OUTPUT_QUIET
+        )
+        if(NOT PYTHON_RESULT EQUAL 0)
+            message(FATAL_ERROR "Broken python: ${PYTHON_EXECUTABLE}")
+        endif()
+    endif()
+
+    # Set the hints for the Python3 package
+    # Reference: https://cmake.org/cmake/help/latest/module/FindPython3.html#hints
+    # The PYTHON_XXX variables are not used by FindPython3, but they are translated
+    # for backwards compatibility with previous Triton versions
+    set(Python3_EXECUTABLE "${PYTHON_EXECUTABLE}")
+    if(PYTHON_LIBRARY)
+        set(Python3_LIBRARY "${PYTHON_LIBRARY}")
+    elseif(PYTHON_LIBRARIES)
+        set(Python3_LIBRARY "${PYTHON_LIBRARIES}")
+    endif()
+    if(PYTHON_INCLUDE_DIRS)
+        set(Python3_INCLUDE_DIR "${PYTHON_INCLUDE_DIRS}")
+    endif()
+    set(Python3_FIND_VIRTUALENV "FIRST")
+
+    find_package(Python3 ${PYTHON_VERSION} COMPONENTS Interpreter Development REQUIRED)
+    message(STATUS "Python3 includes: ${Python3_INCLUDE_DIRS}")
+    message(STATUS "Python3 libraries: ${Python3_LIBRARIES}")
+
+    # For backwards compatibility with existing CMake
+    set(PYTHON_EXECUTABLE "${Python3_EXECUTABLE}")
+
     set(PYTHONPATH_CMD ${CMAKE_COMMAND} -E env PYTHONPATH=$<TARGET_FILE_DIR:triton>/)
-    if(NOT PYTHON_VERSION)
-        set(PYTHON_VERSION 3.6)
-    endif()
-    find_package(PythonInterp ${PYTHON_VERSION} REQUIRED)
-    if(NOT PYTHON_LIBRARIES AND NOT PYTHON_INCLUDE_DIRS)
-        find_package(PythonLibs ${PYTHON_VERSION} REQUIRED)
-    endif()
-    include_directories(${PYTHON_INCLUDE_DIRS})
-    add_definitions("-DPYTHON_LIBRARIES=\"${PYTHON_LIBRARIES}\"")
     add_custom_target(test-python
         COMMAND ${PYTHONPATH_CMD} ${PYTHON_EXECUTABLE} -m unittest discover ${TRITON_ROOT}/src/testers/unittests
         DEPENDS python-triton
@@ -93,7 +134,7 @@ endif()
 # Specific OSX POLICY
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     if(POLICY CMP0025)
-        cmake_policy(SET CMP0025 OLD) # report Apple's Clang as just Clang
+        cmake_policy(SET CMP0025 NEW) # report Apple's Clang as just Clang
     endif()
     if(POLICY CMP0042)
         cmake_policy(SET CMP0042 NEW) # MACOSX_RPATH
@@ -175,6 +216,10 @@ if(BOOST_INTERFACE)
 else()
   message(STATUS "Compiling with wide-integer headers")
   set(TRITON_BOOST_INTERFACE OFF)
+endif()
+
+if(PYTHON_BINDINGS_AUTOCOMPLETE)
+    message(STATUS "Compiling with Python autocomplete stub")
 endif()
 
 add_subdirectory(src)

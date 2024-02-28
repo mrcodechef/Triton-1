@@ -9,11 +9,6 @@
 #define TRITONPYTHONBINDINGS_H
 
 #include <Python.h>
-#if __has_include(<cpython/longintrepr.h>)
-  #include <cpython/longintrepr.h>
-#else
-  #include <longintrepr.h>
-#endif
 
 #if defined(_WIN32) && !defined(__WINE__)
   #include <cmath>
@@ -91,6 +86,9 @@ namespace triton {
 
       //! Initializes the EXTEND python namespace.
       void initExtendNamespace(PyObject* extendDict);
+
+      //! Initializes the VAS python namespace.
+      void initVASNamespace(PyObject* vasDict);
 
       //! Initializes the REG python namespace.
       void initRegNamespace(PyObject* regDict);

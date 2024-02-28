@@ -131,16 +131,16 @@ namespace triton {
     }
 
 
-    bool Architecture::isMemoryExclusiveAccess(void) const {
+    bool Architecture::isMemoryExclusive(const triton::arch::MemoryAccess& mem) const {
       if (!this->cpu)
         return false;
-      return this->cpu->isMemoryExclusiveAccess();
+      return this->cpu->isMemoryExclusive(mem);
     }
 
 
-    void Architecture::setMemoryExclusiveAccess(bool state) {
+    void Architecture::setMemoryExclusiveTag(const triton::arch::MemoryAccess& mem, bool tag) {
       if (this->cpu) {
-        this->cpu->setMemoryExclusiveAccess(state);
+        this->cpu->setMemoryExclusiveTag(mem, tag);
       }
     }
 
@@ -170,6 +170,12 @@ namespace triton {
       if (!this->cpu)
         throw triton::exceptions::Architecture("Architecture::getAllRegisters(): You must define an architecture.");
       return this->cpu->getAllRegisters();
+    }
+
+    const std::unordered_map<triton::uint64, triton::uint8, IdentityHash<triton::uint64>>& Architecture::getConcreteMemory(void) const {
+      if (!this->cpu)
+        throw triton::exceptions::Architecture("Architecture::getConcreteMemory(): You must define an architecture.");
+      return this->cpu->getConcreteMemory();
     }
 
 

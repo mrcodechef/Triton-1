@@ -21,11 +21,23 @@ VERSION_MAJOR = 1
 VERSION_MINOR = 0
 VERSION_PATCH = 0
 
-RELEASE_CANDIDATE = 1
+RELEASE_CANDIDATE = 3
 
 VERSION = f'{VERSION_MAJOR}.{VERSION_MINOR}.{VERSION_PATCH}' + \
             f'rc{RELEASE_CANDIDATE}' if RELEASE_CANDIDATE else ''
 
+def is_cmake_true(value):
+    """Check if CMake would parse the value as True or False. Might not be completely accurate.
+    Based on https://cmake.org/cmake/help/latest/command/if.html#basic-expressions"""
+    if(value in ['ON', 'YES', 'TRUE', 'Y']):
+        return True
+    try:
+        float(value)
+        if(int(value) == 0):
+            return False
+        return True
+    except:
+        return False
 
 class CMakeExtension(Extension):
     def __init__(self, name, sourcedir=''):
@@ -39,6 +51,7 @@ class CMakeBuild(build_ext):
         ext = self.extensions[0]
         self.build_extension(ext)
         self.copy_extension_to_source(ext)
+        self.copy_autocomplete()
 
 
     def build_extension(self, ext):
@@ -129,6 +142,11 @@ class CMakeBuild(build_ext):
         if os.getenv('CMAKE_PREFIX_PATH'):
             cmake_args += ['-DCMAKE_PREFIX_PATH=' + os.getenv('CMAKE_PREFIX_PATH')]
 
+        # Autocomplete stub generation. Enabled by default.
+        python_autocomplete_value = os.getenv('PYTHON_BINDINGS_AUTOCOMPLETE', default='ON').upper()
+        if python_autocomplete_value:
+            cmake_args += ['-DPYTHON_BINDINGS_AUTOCOMPLETE=' + python_autocomplete_value]
+
         # Create temp and lib folders.
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
@@ -138,6 +156,10 @@ class CMakeBuild(build_ext):
 
         subprocess.check_call(['cmake', ext.sourcedir] + cmake_args, cwd=self.build_temp, env=env)
         subprocess.check_call(['cmake', '--build', '.', '--config', 'Release', '--target', 'python-triton'] + build_args, cwd=self.build_temp)
+
+        # The autocomplete file has to be built separately.
+        if (is_cmake_true(python_autocomplete_value)):
+            subprocess.check_call(['cmake', '--build', '.', '--config', 'Release', '--target', 'python_autocomplete'], cwd=self.build_temp)
 
     def copy_extension_to_source(self, ext):
         fullname = self.get_ext_fullname(ext.name)
@@ -157,6 +179,10 @@ class CMakeBuild(build_ext):
 
         copy_file(src_filename, dst_filename, verbose=self.verbose, dry_run=self.dry_run)
 
+    def copy_autocomplete(self):
+        src_filename = os.path.join(self.build_temp + '/doc/triton_autocomplete', 'triton.pyi')
+        if(os.path.exists(src_filename)):
+            copy_file(src_filename, self.build_lib, verbose=self.verbose, dry_run=self.dry_run)
 
 with open("README.md", "r") as f:
     long_description = f.read()

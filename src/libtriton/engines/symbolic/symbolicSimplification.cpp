@@ -234,9 +234,6 @@ namespace triton {
 
         /* Define a temporary Context */
         triton::Context tmpctx(this->architecture->getArchitecture());
-        tmpctx.setMode(triton::modes::MEMORY_ARRAY, true);
-        tmpctx.setMode(triton::modes::SYMBOLIZE_LOAD, true);
-        tmpctx.setMode(triton::modes::SYMBOLIZE_STORE, true);
 
         /* Synch the concrete state */
         tmpctx.setConcreteState(*this->architecture);
@@ -258,12 +255,39 @@ namespace triton {
           }
         }
 
+        /* Keep instructions that build effective addresses (see #1174) */
+        for (auto& inst : in.getInstructions()) {
+          std::set<std::pair<triton::arch::MemoryAccess, triton::ast::SharedAbstractNode>> access;
+          if (inst.isMemoryWrite()) {
+            access = inst.getStoreAccess();
+          }
+          if (inst.isMemoryRead()) {
+            access.insert(inst.getLoadAccess().begin(), inst.getLoadAccess().end());
+          }
+          for (const auto& x : access) {
+            auto refs = triton::ast::search(x.second, triton::ast::REFERENCE_NODE);
+            for (const auto& ref : refs) {
+              auto expr = reinterpret_cast<triton::ast::ReferenceNode*>(ref.get())->getSymbolicExpression();
+              auto eid = expr->getId();
+              lifetime[eid] = expr;
+            }
+            if (x.first.getLeaAst()) {
+              auto refs = triton::ast::search(x.first.getLeaAst(), triton::ast::REFERENCE_NODE);
+              for (const auto& ref : refs) {
+                auto expr = reinterpret_cast<triton::ast::ReferenceNode*>(ref.get())->getSymbolicExpression();
+                auto eid = expr->getId();
+                lifetime[eid] = expr;
+              }
+            }
+          }
+        }
+
         /* Get back the origin assembly of expressions that still alive */
         for (auto& se : lifetime) {
-          auto assembly = se.second->getDisassembly();
-          if (assembly.empty())
+          if (se.second->getDisassembly().empty()) {
             continue;
-          triton::uint64 addr = std::stoull(assembly, nullptr, 16);
+          }
+          auto addr = se.second->getAddress();
           for (auto& inst : in.getInstructions()) {
             if (inst.getAddress() == addr) {
               instructions[addr] = inst;

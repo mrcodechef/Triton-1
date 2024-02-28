@@ -10,7 +10,7 @@ jobs:
         python-version: [3.9]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
@@ -35,30 +35,39 @@ jobs:
         run: |
           sudo apt-get install libz3-dev
           python -m pip install z3-solver
+          python -m pip install importlib-resources
+
+      - name: Install Ninja
+        run: |
+          sudo apt-get install ninja-build
+
+      - name: Install Meson
+        run: |
+          python -m pip install meson
 
       - name: Install Bitwuzla
         run: |
-          git clone https://github.com/bitwuzla/bitwuzla
+          git clone https://github.com/bitwuzla/bitwuzla.git
           cd bitwuzla
-          ./contrib/setup-cadical.sh
-          ./contrib/setup-btor2tools.sh
-          ./contrib/setup-symfpu.sh
-          ./configure.sh --shared
-          sudo make -C build install
+          git checkout -b 0.2.0 0.2.0
+          python ./configure.py --shared
+          cd build
+          sudo ninja install
+          sudo ldconfig
           cd ..
 
       - name: Install Capstone
         run: |
-          wget https://github.com/aquynh/capstone/archive/4.0.2.tar.gz
-          tar -xf ./4.0.2.tar.gz
-          cd ./capstone-4.0.2
+          wget https://github.com/aquynh/capstone/archive/5.0.1.tar.gz
+          tar -xf ./5.0.1.tar.gz
+          cd ./capstone-5.0.1
           bash ./make.sh
           sudo make install
           cd ../
 
       - name: Install Unicorn
         run: |
-          python -m pip install unicorn
+          python -m pip install unicorn==2.0.0
 
       - name: Install LIEF
         run: |
@@ -68,7 +77,7 @@ jobs:
         run: |
           mkdir ./build
           cd ./build
-          cmake -DGCOV=on -DZ3_INTERFACE=on -DBITWUZLA_INTERFACE=on -DLLVM_INTERFACE=on -DCMAKE_PREFIX_PATH=${{env.LLVM_PATH}} ..
+          cmake -DGCOV=on -DZ3_INTERFACE=on -DBITWUZLA_INTERFACE=on -DBITWUZLA_INCLUDE_DIRS=/usr/local/include -DBITWUZLA_LIBRARIES=/usr/local/lib/x86_64-linux-gnu/libbitwuzla.so -DLLVM_INTERFACE=on -DCMAKE_PREFIX_PATH=${{env.LLVM_PATH}} ..
           sudo make -j3 install
 
       - name: Unittests

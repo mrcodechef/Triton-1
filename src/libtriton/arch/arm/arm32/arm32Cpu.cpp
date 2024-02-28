@@ -33,7 +33,6 @@ namespace triton {
           this->itInstrIndex    = 0;
           this->itCC            = triton::arch::arm::condition_e::ID_CONDITION_INVALID;
           this->itCCInv         = triton::arch::arm::condition_e::ID_CONDITION_INVALID;
-          this->exclusiveMemAcc = false;
 
           this->clear();
           this->disassInit();
@@ -83,8 +82,9 @@ namespace triton {
 
 
         void Arm32Cpu::copy(const Arm32Cpu& other) {
-          this->callbacks = other.callbacks;
-          this->memory    = other.memory;
+          this->callbacks           = other.callbacks;
+          this->exclusiveMemoryTags = other.exclusiveMemoryTags;
+          this->memory              = other.memory;
 
           std::memcpy(this->r0,   other.r0,   sizeof(this->r0));
           std::memcpy(this->r1,   other.r1,   sizeof(this->r1));
@@ -179,6 +179,10 @@ namespace triton {
 
         const std::unordered_map<triton::arch::register_e, const triton::arch::Register>& Arm32Cpu::getAllRegisters(void) const {
           return this->id2reg;
+        }
+
+        const std::unordered_map<triton::uint64, triton::uint8, IdentityHash<triton::uint64>>& Arm32Cpu::getConcreteMemory(void) const {
+          return this->memory;
         }
 
 
@@ -326,6 +330,14 @@ namespace triton {
               triton::arch::arm::condition_e cc = this->itStateArray[this->itInstrIndex] == 't' ? this->itCC : this->itCCInv;
 
               inst.setCodeCondition(cc);
+
+              /* From the reference manual: "16-bit instructions in the IT
+                 block, other than CMP, CMN and TST, do not set the condition
+                 flags". */
+              if (inst.getSize() == 2 && inst.getType() != ID_INS_CMP && \
+                  inst.getType() != ID_INS_CMN && inst.getType() != ID_INS_TST) {
+                inst.setUpdateFlag(false);
+              }
 
               this->itInstrsCount--;
               this->itInstrIndex++;
@@ -775,13 +787,30 @@ namespace triton {
         }
 
 
-        bool Arm32Cpu::isMemoryExclusiveAccess(void) const {
-          return this->exclusiveMemAcc;
+        bool Arm32Cpu::isMemoryExclusive(const triton::arch::MemoryAccess& mem) const {
+          triton::uint64 base = mem.getAddress();
+
+          for (triton::usize index = 0; index < mem.getSize(); index++) {
+            if (this->exclusiveMemoryTags.find(base + index) != this->exclusiveMemoryTags.end()) {
+              return true;
+            }
+          }
+
+          return false;
         }
 
 
-        void Arm32Cpu::setMemoryExclusiveAccess(bool state) {
-          this->exclusiveMemAcc = state;
+        void Arm32Cpu::setMemoryExclusiveTag(const triton::arch::MemoryAccess& mem, bool tag) {
+          triton::uint64 base = mem.getAddress();
+
+          for (triton::usize index = 0; index < mem.getSize(); index++) {
+            if (tag == true) {
+              this->exclusiveMemoryTags.insert(base + index);
+            }
+            else {
+              this->exclusiveMemoryTags.erase(base + index);
+            }
+          }
         }
 
 

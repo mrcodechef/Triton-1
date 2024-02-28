@@ -1085,11 +1085,17 @@ namespace triton {
           auto  pc  = triton::arch::OperandWrapper(this->architecture->getParentRegister(ID_REG_ARM32_PC));
 
           /*
-           * Note: Capstone already encodes the result into the source operand. We don't have
-           * to compute the add operation but do we lose the symbolic?
+           * Note: Here we deal only with the Thumb version of ADR. For the ARM
+           * version, Capstone decodes it as an ADD and adds pc as an explicit
+           * operand.
            */
-          /* Create symbolic semantics */
-          auto node1 = this->symbolicEngine->getOperandAst(inst, src);
+
+          /* Create symbolic operands */
+          auto op1 = this->getArm32SourceOperandAst(inst, src);
+          auto op2 = this->getArm32SourceOperandAst(inst, pc);
+
+          /* Create the semantics */
+          auto node1 = this->astCtxt->bvadd(op1, op2);
           auto node2 = this->buildConditionalSemantics(inst, dst, node1);
 
           /* Create symbolic expression */
@@ -2420,8 +2426,8 @@ namespace triton {
           /* Spread taint */
           this->spreadTaint(inst, cond, expr, dst, this->taintEngine->isTainted(src));
 
-          /* Update exclusive memory access flag */
-          this->architecture->setMemoryExclusiveAccess(true);
+          /* Update exclusive memory access tag */
+          this->architecture->setMemoryExclusiveTag(src.getConstMemory(), true);
 
           /* Update condition flag */
           if (cond->evaluate() == true) {
@@ -4261,26 +4267,24 @@ namespace triton {
           auto op2 = this->symbolicEngine->getOperandAst(inst, dst2);
 
           /* Check whether there is exclusive access */
-          auto status = this->architecture->isMemoryExclusiveAccess() == true ?
-                          this->astCtxt->bv(0, dst1.getBitSize()) :     /* the operation updates memory */
-                          this->astCtxt->bv(1, dst1.getBitSize());      /* the operation fails to update memory */
+          auto status = this->astCtxt->bv(this->architecture->isMemoryExclusive(dst2.getConstMemory()) ? 0 : 1, dst1.getBitSize());
 
           /* Create the semantics */
           auto cond  = this->getCodeConditionAst(inst);
           auto node1 = this->astCtxt->ite(cond, status, this->symbolicEngine->getOperandAst(inst, dst1));
-          auto node2 = this->architecture->isMemoryExclusiveAccess() == true ?
+          auto node2 = this->architecture->isMemoryExclusive(dst2.getConstMemory()) == true ?
                           this->astCtxt->ite(cond, op1, op2) :
                           this->astCtxt->ite(cond, op2, op2);
 
           /* Create symbolic expression */
-          auto expr1 = this->symbolicEngine->createSymbolicExpression(inst, node1, dst1, "STREX operation - STATUS update");
+          auto expr1 = this->symbolicEngine->createSymbolicExpression(inst, node1, dst1, "STREX operation - write status");
           auto expr2 = this->symbolicEngine->createSymbolicExpression(inst, node2, dst2, "STREX operation - STORE access");
 
           /* Spread taint */
           this->spreadTaint(inst, cond, expr2, dst2, this->taintEngine->isTainted(src));
 
-          /* Update exclusive memory access flag */
-          this->architecture->setMemoryExclusiveAccess(false);
+          /* Update exclusive memory access tag */
+          this->architecture->setMemoryExclusiveTag(dst2.getConstMemory(), false);
 
           /* Update condition flag */
           if (cond->evaluate() == true) {

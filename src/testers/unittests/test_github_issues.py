@@ -3,7 +3,6 @@
 """Issue from Github."""
 
 import unittest
-
 from triton import *
 
 
@@ -586,3 +585,98 @@ class TestIssue1187(unittest.TestCase):
 
         # Processing must not call callback
         self.assertEqual(self.count, 0)
+
+
+class TestIssue1193(unittest.TestCase):
+    """Testing #1193."""
+
+    def test_1(self):
+        ctx = TritonContext(ARCH.AARCH64)
+        ctx.setMode(MODE.ALIGNED_MEMORY, True)
+
+        # setup memory
+        ctx.setConcreteMemoryAreaValue(0x129098, 0xF69078DEB08D5F08.to_bytes(length=8, byteorder='little'))
+        ctx.setConcreteMemoryAreaValue(0x1290a0, 0x939027DCB2D0494B.to_bytes(length=8, byteorder='little'))
+        ctx.setConcreteMemoryAreaValue(0x1290a8, b"\x01")
+        ctx.setConcreteMemoryAreaValue(0x0a7090, b"\x27\x2f\xff\xdf\xbd\x57\xe3\x93\x27\x2f\xff\xdf\xbd\x57\xe3\x93")
+
+        setup = [
+            (0x40918, b"\x40\x07\x00\xB0"),   # adrp x0, #0x129000
+            (0x4091C, b"\x00\x60\x02\x91"),   # add  x0, x0, #0x98
+        ]
+        for pc, op in setup:
+            inst = Instruction(pc, op)
+            ctx.processing(inst)
+
+        code = [
+            b"\x08\x40\x40\x39",# LDRB      W8, [X0,#0x10]
+            b"\xe8\x00\x00\x34",# CBZ       W8, locret_4840C
+            b"\xE8\x02\x00\xF0",# ADRP      X8, #xmmword_A7090@PAGE
+            b"\x00\x00\xC0\x3D",# LDR       Q0, [X0]
+            b"\x01\x25\xC0\x3D",# LDR       Q1, [X8,#xmmword_A7090@PAGEOFF]
+            b"\x1F\x40\x00\x39",# STRB      WZR, [X0,#0x10]
+            b"\x00\x1C\x21\x6E",# EOR       V0.16B, V0.16B, V1.16B
+            b"\x00\x00\x80\x3D",# STR       Q0, [X0]
+        ]
+
+        pc = 0x483ec
+        for op in code:
+            inst = Instruction(pc, op)
+            ctx.processing(inst)
+            pc = ctx.getConcreteRegisterValue(ctx.registers.pc)
+
+        self.assertEqual(ctx.getConcreteMemoryAreaValue(0x1290a8, 1), b'\x00')
+        self.assertEqual(ctx.getConcreteMemoryAreaValue(0x129098, 16), b'/proc/self/maps\x00')
+
+
+class TestIssue1265(unittest.TestCase):
+    """Testing #1265."""
+
+    def setUp(self):
+        self.ctx = TritonContext(ARCH.AARCH64)
+        self.ctx.setConcreteMemoryValue(MemoryAccess(0x122fff00, 8), 0x1122334455667788)
+
+    def test_1(self):
+        inst = Instruction(0x12300000, b'\x00\xf8\xff\x58') # ldr x0, #-256
+        self.ctx.processing(inst)
+        x0 = self.ctx.getConcreteRegisterValue(self.ctx.registers.x0)
+        self.assertEqual(x0, 0x1122334455667788)
+
+    def test_2(self):
+        inst = Instruction(0x12300000, b'\x00\xf8\xff\x18') # ldr w0, #-256
+        self.ctx.processing(inst)
+        x0 = self.ctx.getConcreteRegisterValue(self.ctx.registers.x0)
+        self.assertEqual(x0, 0x55667788)
+
+
+# FIXME: Uncomment this one when we will move to Capstone 5 as min version
+#class TestIssue1195(unittest.TestCase):
+#    """Testing #1195."""
+#
+#    def test_1(self):
+#        ctx = TritonContext(ARCH.AARCH64)
+#
+#        ctx.setConcreteRegisterValue(ctx.registers.x20, 0)
+#        ctx.setConcreteRegisterValue(ctx.registers.tpidr_el0, 0x1122334455667788)
+#
+#        self.assertEqual(ctx.getConcreteRegisterValue(ctx.registers.tpidr_el0), 0x1122334455667788)
+#        self.assertEqual(ctx.getConcreteRegisterValue(ctx.registers.x20), 0)
+#
+#        ctx.processing(Instruction(b"\x54\xD0\x3B\xD5")) # mrs x20, tpidr_el0
+#
+#        self.assertEqual(ctx.getConcreteRegisterValue(ctx.registers.tpidr_el0), 0x1122334455667788)
+#        self.assertEqual(ctx.getConcreteRegisterValue(ctx.registers.x20), 0x1122334455667788)
+#
+#    def test_2(self):
+#        ctx = TritonContext(ARCH.AARCH64)
+#
+#        ctx.setConcreteRegisterValue(ctx.registers.x20, 0x1122334455667788)
+#        ctx.setConcreteRegisterValue(ctx.registers.tpidr_el0, 0)
+#
+#        self.assertEqual(ctx.getConcreteRegisterValue(ctx.registers.tpidr_el0), 0)
+#        self.assertEqual(ctx.getConcreteRegisterValue(ctx.registers.x20), 0x1122334455667788)
+#
+#        ctx.processing(Instruction(b"\x54\xd0\x1b\xd5")) #  msr tpidr_el0, x20
+#
+#        self.assertEqual(ctx.getConcreteRegisterValue(ctx.registers.tpidr_el0), 0x1122334455667788)
+#        self.assertEqual(ctx.getConcreteRegisterValue(ctx.registers.x20), 0x1122334455667788)

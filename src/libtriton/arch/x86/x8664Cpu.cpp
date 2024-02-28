@@ -394,6 +394,10 @@ namespace triton {
         return this->id2reg;
       }
 
+      const std::unordered_map<triton::uint64, triton::uint8, IdentityHash<triton::uint64>>& x8664Cpu::getConcreteMemory(void) const {
+        return this->memory;
+      }
+
 
       std::set<const triton::arch::Register*> x8664Cpu::getParentRegisters(void) const {
         std::set<const triton::arch::Register*> ret;
@@ -1787,13 +1791,13 @@ namespace triton {
       }
 
 
-      bool x8664Cpu::isMemoryExclusiveAccess(void) const {
+      bool x8664Cpu::isMemoryExclusive(const triton::arch::MemoryAccess& mem) const {
         /* There is no exclusive memory access support in x86_64 */
         return false;
       }
 
 
-      void x8664Cpu::setMemoryExclusiveAccess(bool state) {
+      void x8664Cpu::setMemoryExclusiveTag(const triton::arch::MemoryAccess& mem, bool tag) {
         /* There is no exclusive memory access support in x86_64 */
       }
 

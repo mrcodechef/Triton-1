@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python4
 ## -*- coding: utf-8 -*-
 
 from __future__          import print_function
@@ -148,8 +148,25 @@ CODE  = [
     (b"\x00\x04\x00\xd1", "sub x0, x0, #1"),
     (b"\x00\x04\x00\xb1", "adds x0, x0, #1"),
 
+    (b"\x01\x00\x80\xd2", "movz x1, #0"),
+    (b"\x42\x01\x80\xd2", "movz x2, #10"),
+    (b"\x23\x00\x80\xd2", "movz x3, #1"),
+    (b"\x21\x04\x00\xd1", "sub x1, x1, #1"),
     (b"\x20\x00\x02\x9a", "adc x0, x1, x2"),
     (b"\x20\x00\x02\x1a", "adc w0, w1, w2"),
+    (b"\x20\x00\x02\xba", "adcs x0, x1, x2"),
+    (b"\x20\x00\x02\x3a", "adcs w0, w1, w2"),
+    (b"\x20\x00\x03\xba", "adcs x0, x1, x3"),
+
+    (b"\x61\x00\x80\xd2", "movz x1, #3"),
+    (b"\x42\x01\x80\xd2", "movz x2, #10"),
+    (b"\x23\x00\x80\xd2", "movz x3, #1"),
+    (b"\x20\x00\x02\xda", "sbc x0, x1, x2"),
+    (b"\x20\x00\x02\x5a", "sbc w0, w1, w2"),
+    (b"\x20\x00\x02\xfa", "sbcs x0, x1, x2"),
+    (b"\x20\x00\x02\x7a", "sbcs w0, w1, w2"),
+    (b"\x40\x00\x01\xfa", "sbcs x0, x2, x1"),
+    (b"\x40\x00\x01\x7a", "sbcs w0, w2, w1"),
 
     (b"\x20\x1a\x09\x30", "adr x0, #0x12345"),
     (b"\xe1\xff\x7f\x70", "adr x1, #0xfffff"),
@@ -195,6 +212,10 @@ CODE  = [
     (b"\x20\x28\xc2\x9a", "asr x0, x1, x2"),
     (b"\x42\x00\x80\xd2", "movz x2, #0x2"),
     (b"\x20\x28\xc2\x9a", "asr x0, x1, x2"),
+
+    (b"\x20\x28\x88\xd2", "movz x0, #0x4141"),
+    (b"\x20\x28\xa8\xf2", "movk x0, #0x4141, lsl #16"),
+    (b"\x01\x28\xc0\x1a", "asr w1, w0, w0"),
 
     (b"\x82\x46\x82\xd2", "movz x2, #0x1234"),
     (b"\x01\xcf\x8a\xd2", "movz x1, #0x5678"),
@@ -343,6 +364,18 @@ CODE  = [
 
     (b"\x01\x06\xa0\xd2", "movz x1, #0x30, lsl #16"), # HEAP address
     (b"\x02\x02\x80\xd2", "movz x2, #16"),
+    (b"\x25\x08\x40\xf8", "ldtr x5, [x1]"),
+    (b"\x26\x08\x40\xf8", "ldtr x6, [x1, #0]"),
+    (b"\x27\x48\x40\xf8", "ldtr x7, [x1, #4]"),
+    (b"\x01\x06\xa0\xd2", "movz x1, #0x30, lsl #16"), # HEAP address
+    (b"\x21\xc8\x00\x91", "add x1, x1, #50"), # HEAP+50 address
+    (b"\x29\x28\x5e\xf8", "ldtr x9, [x1, #-30]"),
+    (b"\x01\x04\xa0\xd2", "movz x1, #0x20, lsl #16"), # STACK address
+    (b"\x3f\x10\x00\x91", "add sp, x1, #4"),
+    (b"\xeb\x0b\x40\xf8", "ldtr x11, [sp]"),
+
+    (b"\x01\x06\xa0\xd2", "movz x1, #0x30, lsl #16"), # HEAP address
+    (b"\x02\x02\x80\xd2", "movz x2, #16"),
     (b"\x25\x00\x40\x39", "ldrb w5, [x1]"),
     (b"\x26\x04\x40\x38", "ldrb w6, [x1], #0"),
     (b"\x27\x44\x40\x38", "ldrb w7, [x1], #4"),
@@ -402,6 +435,16 @@ CODE  = [
     (b"\xea\x2f\x40\x29", "ldp w10, w11, [sp]"),
 
     (b"\x01\x04\xa0\xd2", "movz x1, #0x20, lsl #16"), # STACK address
+    (b"\x28\x24\x40\x69", "ldpsw x8, x9, [x1]"),
+    (b"\x28\x24\x41\x69", "ldpsw x8, x9, [x1, #8]"),
+    (b"\x28\xa4\xc0\x68", "ldpsw x8, x9, [x1], #4"),
+    (b"\x28\x24\xc1\x69", "ldpsw x8, x9, [x1, #8]!"),
+    (b"\x01\x04\xa0\xd2", "movz x1, #0x20, lsl #16"), # STACK address
+    (b"\x21\x28\x00\x91", "add x1, x1, #10"), # STACK+10
+    (b"\x28\xa4\x7f\x69", "ldpsw x8, x9, [x1, #-4]"),
+    (b"\x28\xa4\xff\x69", "ldpsw x8, x9, [x1, #-4]!"),
+
+    (b"\x01\x04\xa0\xd2", "movz x1, #0x20, lsl #16"), # STACK address
     (b"\x21\x30\x00\x91", "add x1, x1, #12"), # STACK+12
     (b"\x20\x00\x40\xf8", "ldur x0, [x1]"),
     (b"\x20\x10\x40\xf8", "ldur x0, [x1, #1]"),
@@ -448,6 +491,112 @@ CODE  = [
     (b"\x20\xd0\x5f\x78", "ldurh w0, [x1, #0xfffffffffffffffd]"),
     (b"\x20\x00\x40\xf8", "ldur x0, [x1]"),
     (b"\x20\xc0\x5f\x78", "ldurh w0, [x1, #0xfffffffffffffffc]"),
+
+    (b"\x01\x04\xa0\xd2", "movz x1, #0x20, lsl #16"),
+    (b"\x21\x30\x00\x91", "add x1, x1, #12"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x18\x40\xf8", "ldtr x0, [x1, #1]"),
+    (b"\x20\x28\x40\xf8", "ldtr x0, [x1, #2]"),
+    (b"\x20\x38\x40\xf8", "ldtr x0, [x1, #3]"),
+    (b"\x20\x48\x40\xf8", "ldtr x0, [x1, #4]"),
+    (b"\x20\xf8\x5f\xf8", "ldtr x0, [x1, #-1]"),
+    (b"\x20\xe8\x5f\xf8", "ldtr x0, [x1, #-2]"),
+    (b"\x20\xd8\x5f\xf8", "ldtr x0, [x1, #-3]"),
+    (b"\x20\xc8\x5f\xf8", "ldtr x0, [x1, #-4]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x08\x40\x38", "ldtrb w0, [x1]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x18\x40\x38", "ldtrb w0, [x1, #1]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x28\x40\x38", "ldtrb w0, [x1, #2]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x38\x40\x38", "ldtrb w0, [x1, #3]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x48\x40\x38", "ldtrb w0, [x1, #4]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\xf8\x5f\x38", "ldtrb w0, [x1, #0xffffffffffffffff]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\xe8\x5f\x38", "ldtrb w0, [x1, #0xfffffffffffffffe]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\xd8\x5f\x38", "ldtrb w0, [x1, #0xfffffffffffffffd]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\xc8\x5f\x38", "ldtrb w0, [x1, #0xfffffffffffffffc]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x08\x40\x78", "ldtrh w0, [x1]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x18\x40\x78", "ldtrh w0, [x1, #1]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x28\x40\x78", "ldtrh w0, [x1, #2]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x38\x40\x78", "ldtrh w0, [x1, #3]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x48\x40\x78", "ldtrh w0, [x1, #4]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\xf8\x5f\x78", "ldtrh w0, [x1, #0xffffffffffffffff]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\xe8\x5f\x78", "ldtrh w0, [x1, #0xfffffffffffffffe]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\xd8\x5f\x78", "ldtrh w0, [x1, #0xfffffffffffffffd]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\xc8\x5f\x78", "ldtrh w0, [x1, #0xfffffffffffffffc]"),
+
+    (b"\x01\x04\xa0\xd2", "movz x1, #0x20, lsl #16"),
+    (b"\x21\x30\x00\x91", "add x1, x1, #12"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x08\xc0\x38", "ldtrsb w0, [x1]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x08\x80\x38", "ldtrsb x0, [x1]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x08\xc0\x38", "ldtrsb w0, [x1]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x08\xc0\x78", "ldtrsh w0, [x1]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x08\x80\x78", "ldtrsh x0, [x1]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x08\x80\xb8", "ldtrsw x0, [x1]"),
+
+    (b"\x01\x06\xa0\xd2", "movz x1, #0x30, lsl #16"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x08\xc0\x38", "ldtrsb w0, [x1]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x08\x80\x38", "ldtrsb x0, [x1]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x08\xc0\x38", "ldtrsb w0, [x1]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x08\xc0\x78", "ldtrsh w0, [x1]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x08\x80\x78", "ldtrsh x0, [x1]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x08\x80\xb8", "ldtrsw x0, [x1]"),
+
+    (b"\x01\x04\xa0\xd2", "movz x1, #0x20, lsl #16"),
+    (b"\x21\x30\x00\x91", "add x1, x1, #12"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x00\xc0\x39", "ldrsb w0, [x1]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x08\x80\x38", "ldtrsb x0, [x1]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x08\xc0\x38", "ldtrsb w0, [x1]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x08\xc0\x78", "ldtrsh w0, [x1]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x08\x80\x78", "ldtrsh x0, [x1]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x08\x80\xb8", "ldtrsw x0, [x1]"),
+
+    (b"\x01\x06\xa0\xd2", "movz x1, #0x30, lsl #16"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x08\xc0\x38", "ldtrsb w0, [x1]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x08\x80\x38", "ldtrsb x0, [x1]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x08\xc0\x38", "ldtrsb w0, [x1]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x08\xc0\x78", "ldtrsh w0, [x1]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x08\x80\x78", "ldtrsh x0, [x1]"),
+    (b"\x20\x08\x40\xf8", "ldtr x0, [x1]"),
+    (b"\x20\x08\x80\xb8", "ldtrsw x0, [x1]"),
 
     (b"\x01\x04\xa0\xd2", "movz x1, #0x20, lsl #16"), # STACK address
     (b"\x21\x30\x00\x91", "add x1, x1, #12"), # STACK+12
@@ -697,6 +846,19 @@ CODE  = [
     (b"\x29\x00\x00\xf9", "str x9, [x1]"),
     (b"\x2a\x00\x00\x39", "strb w10, [x1]"),
     (b"\x2b\x00\x00\x79", "strh w11, [x1]"),
+    (b"\x25\x08\x00\xf8", "sttr x5, [x1]"),
+    (b"\x26\x88\x00\x38", "sttrb w6, [x1, #8]"),
+    (b"\x27\xc8\x00\x78", "sttrh w7, [x1, #12]"),
+    (b"\x26\x08\x00\x38", "sttrb w6, [x1]"),
+    (b"\x27\x08\x00\x78", "sttrh w7, [x1]"),
+    (b"\x2a\xfc\x09\x08", "stlxrb w9, w10, [x1]"),
+    (b"\x2a\xfc\x09\x48", "stlxrh w9, w10, [x1]"),
+    (b"\x2a\xfc\x09\x88", "stlxr w9, w10, [x1]"),
+    (b"\x2a\xfc\x09\xc8", "stlxr w9, x10, [x1]"),
+    (b"\x2a\x7c\x09\x08", "stxrb w9, w10, [x1]"),
+    (b"\x2a\x7c\x09\x48", "stxrh w9, w10, [x1]"),
+    (b"\x2a\x7c\x09\x88", "stxr w9, w10, [x1]"),
+    (b"\x2a\x7c\x09\xc8", "stxr w9, x10, [x1]"),
 
     (b"\x01\x06\xa0\xd2", "movz x1, #0x30, lsl #16"), # HEAP address
     (b"\xe5\x24\x81\xd2", "movz x5, #2343"),
@@ -715,6 +877,20 @@ CODE  = [
     (b"\x29\x28\x81\x28", "stp w9, w10, [x1], #8"),
     (b"\x25\x20\x84\x29", "stp w5, w8, [x1, #32]!"),
     (b"\x26\x1c\x02\x29", "stp w6, w7, [x1, #16]"),
+    (b"\x25\x18\x00\xa8", "stnp x5, x6, [x1]"),
+    (b"\x25\x98\x00\xa8", "stnp x5, x6, [x1, #8]"),
+    (b"\x24\x18\x00\x28", "stnp w4, w6, [x1]"),
+    (b"\x22\x0c\x00\x6c", "stnp d2, d3, [x1]"),
+    (b"\x25\x18\x24\xc8", "stxp w4, x5, x6, [x1]"),
+    (b"\x25\x18\x24\x88", "stxp w4, w5, w6, [x1]"),
+
+    (b"\x01\x04\xa0\xd2", "movz x1, #0x20, lsl #16"), # STACK address
+    (b"\x25\x18\x40\xa8", "ldnp x5, x6, [x1]"),
+    (b"\x25\x98\x40\xa8", "ldnp x5, x6, [x1, #8]"),
+    (b"\x24\x18\x40\x28", "ldnp w4, w6, [x1]"),
+    (b"\x22\x0c\x40\x6c", "ldnp d2, d3, [x1]"),
+    (b"\x25\x18\x7f\xc8", "ldxp x5, x6, [x1]"),
+    (b"\x25\x18\x7f\x88", "ldxp w5, w6, [x1]"),
 
     (b"\xc1\xbd\x9b\xd2", "movz x1, #0xddee"),
     (b"\x20\x1c\x40\x93", "sxtb x0, x1"),
@@ -739,6 +915,13 @@ CODE  = [
     (b"\x40\x04\x81\xda", "csneg x0, x2, x1, eq"),
     (b"\x20\x14\x82\xda", "csneg x0, x1, x2, ne"),
     (b"\x40\x14\x81\xda", "csneg x0, x2, x1, ne"),
+
+    (b"\x41\x14\x82\xda", "cneg x1, x2, eq"),
+    (b"\x22\x14\x81\xda", "cneg x2, x1, eq"),
+    (b"\x41\x04\x82\xda", "cneg x1, x2, ne"),
+    (b"\x22\x04\x81\xda", "cneg x2, x1, ne"),
+    (b"\x22\xa4\x81\xda", "cneg x2, x1, lt"),
+    (b"\x22\xd4\x81\xda", "cneg x2, x1, gt"),
 
     (b"\x41\x9a\x80\xd2", "movz x1, #1234"),
     (b"\x20\xf8\x7f\xd3", "lsl x0, x1, #1"),
@@ -1541,6 +1724,11 @@ CODE  = [
     (b"\x20\x00\x41\xd3", "ubfiz x0, x1, #63, #1"),
 
     (b"\x00\x00\x80\xd2", "movz x0, #0"),
+    (b"\xf7\x03\x00\xaa", "mov x23, x0"),
+    (b"\x00\x04\x00\xd1", "sub x0, x0, #1"),
+    (b"\x17\x18\x7b\xd3", "ubfiz x23, x0, #5, #7"),
+
+    (b"\x00\x00\x80\xd2", "movz x0, #0"),
     (b"\x00\x04\x00\xd1", "sub x0, x0, #1"),
     (b"\x20\x00\x18\x53", "ubfiz w0, w1, #8, #1"),
 
@@ -1801,6 +1989,11 @@ CODE  = [
     (b"\x29\xfc\x9f\xc8", "stlr x9, [x1]"),
     (b"\x2a\xfc\x9f\x08", "stlrb w10, [x1]"),
     (b"\x2b\xfc\x9f\x48", "stlrh w11, [x1]"),
+    (b"\x25\x08\x00\xf8", "sttr x5, [x1]"),
+    (b"\x26\x88\x00\x38", "sttrb w6, [x1, #8]"),
+    (b"\x27\xc8\x00\x78", "sttrh w7, [x1, #12]"),
+    (b"\x26\x08\x00\x38", "sttrb w6, [x1]"),
+    (b"\x27\x08\x00\x78", "sttrh w7, [x1]"),
 
     (b"\x01\x04\xa0\xd2", "movz x1, #0x20, lsl #16"), # STACK address
     (b"\x21\x20\x00\x91", "add x1, x1, #8"), # STACK+8
@@ -1873,8 +2066,81 @@ CODE  = [
     (b"\x22\xf4\x7e\x92", "bic x2, x1, #3"),
     (b"\x22\xf8\x7d\x92", "bic x2, x1, #4"),
 
+    (b"\x22\xf0\x7d\xf2", "bics x2, x1, #7"),
+    (b"\x22\xf8\x7c\xf2", "bics x2, x1, #8"),
+    (b"\x22\x70\x1d\x72", "bics w2, w1, #7"),
+    (b"\x22\x78\x1c\x72", "bics w2, w1, #8"),
+
     (b"\x28\x00\x00\x37", "tbnz w8, #0, #4"),
     (b"\x48\x00\x00\x36", "tbz w8, #0, #0"),
+
+    # Armv8-A Neon
+    (b"\x01\x04\xa0\xd2", "movz x1, #0x20, lsl #16"), # STACK address
+    (b"\x02\x01\x80\xd2", "movz x2, #0x8"),
+
+    (b"\x20\x40\x40\x4c", "ld3 {v0.16b, v1.16b, v2.16b}, [x1]"),
+    (b"\x20\x44\x40\x4c", "ld3 {v0.8h, v1.8h, v2.8h}, [x1]"),
+    (b"\x20\x48\x40\x4c", "ld3 {v0.4s, v1.4s, v2.4s}, [x1]"),
+    (b"\x20\x4c\x40\x4c", "ld3 {v0.2d, v1.2d, v2.2d}, [x1]"),
+    (b"\x20\x40\x40\x0c", "ld3 {v0.8b, v1.8b, v2.8b}, [x1]"),
+    (b"\x20\x44\x40\x0c", "ld3 {v0.4h, v1.4h, v2.4h}, [x1]"),
+    (b"\x20\x48\x40\x0c", "ld3 {v0.2s, v1.2s, v2.2s}, [x1]"),
+    (b"\x20\x40\xc2\x4c", "ld3 {v0.16b, v1.16b, v2.16b}, [x1], x2"),
+
+    (b"\x20\xe0\x40\x4d", "ld3r {v0.16b, v1.16b, v2.16b}, [x1]"),
+    (b"\x20\xe4\x40\x4d", "ld3r {v0.8h, v1.8h, v2.8h}, [x1]"),
+    (b"\x20\xe8\x40\x4d", "ld3r {v0.4s, v1.4s, v2.4s}, [x1]"),
+    (b"\x20\xec\x40\x4d", "ld3r {v0.2d, v1.2d, v2.2d}, [x1]"),
+    (b"\x20\xe0\x40\x0d", "ld3r {v0.8b, v1.8b, v2.8b}, [x1]"),
+    (b"\x20\xe4\x40\x0d", "ld3r {v0.4h, v1.4h, v2.4h}, [x1]"),
+    (b"\x20\xe8\x40\x0d", "ld3r {v0.2s, v1.2s, v2.2s}, [x1]"),
+    (b"\x20\xec\x40\x0d", "ld3r {v0.1d, v1.1d, v2.1d}, [x1]"),
+
+    #(b"\x20\x40\xdf\x4c", "ld3 {v0.16b, v1.16b, v2.16b}, [x1], #48"),   # working on capstone 5.x but not on 4.x
+    #(b"\x20\x44\xdf\x0c", "ld3 {v0.4h, v1.4h, v2.4h}, [x1], #24"),      # working on capstone 5.x but not on 4.x
+    #(b"\x20\xe0\xdf\x4d", "ld3r {v0.16b, v1.16b, v2.16b}, [x1], #3"),   # working on capstone 5.x but not on 4.x
+    #(b"\x20\xe4\xdf\x4d", "ld3r {v0.8h, v1.8h, v2.8h}, [x1], #6"),      # working on capstone 5.x but not on 4.x
+    #(b"\x20\xe8\xdf\x4d", "ld3r {v0.4s, v1.4s, v2.4s}, [x1], #12"),     # working on capstone 5.x but not on 4.x
+    #(b"\x20\xec\xdf\x4d", "ld3r {v0.2d, v1.2d, v2.2d}, [x1], #24"),     # working on capstone 5.x but not on 4.x
+    #(b"\x20\xe0\xdf\x0d", "ld3r {v0.8b, v1.8b, v2.8b}, [x1], #3"),      # working on capstone 5.x but not on 4.x
+    #(b"\x20\xe4\xdf\x0d", "ld3r {v0.4h, v1.4h, v2.4h}, [x1], #6"),      # working on capstone 5.x but not on 4.x
+    #(b"\x20\xe8\xdf\x0d", "ld3r {v0.2s, v1.2s, v2.2s}, [x1], #12"),     # working on capstone 5.x but not on 4.x
+    #(b"\x20\xec\xdf\x0d", "ld3r {v0.1d, v1.1d, v2.1d}, [x1], #24"),     # working on capstone 5.x but not on 4.x
+
+    (b"\x00\xe4\x01\x4f", "movi v0.16b, #32"),
+    (b"\xc0\xe6\x00\x0f", "movi v0.8b, #22"),
+    (b"\x80\x85\x00\x4f", "movi v0.8h, #12"),
+    (b"\x40\x85\x01\x0f", "movi v0.4h, #42"),
+    (b"\x80\x06\x01\x4f", "movi v0.4s, #52"),
+    (b"\x80\x06\x00\x0f", "movi v0.2s, #20"),
+    (b"\x00\xe4\x00\x6f", "movi v0.2d, #0"),
+    (b"\x80\xa5\x00\x4f", "movi v0.8h, #12, LSL #8"),
+    (b"\x80\x46\x00\x4f", "movi v0.4s, #20, LSL #16"),
+
+    (b"\x20\x00\x40\x4c", "ld4 {v0.16b, v1.16b, v2.16b, v3.16b}, [x1]"),
+    (b"\x20\x04\x40\x4c", "ld4 {v0.8h, v1.8h, v2.8h, v3.8h}, [x1]"),
+    (b"\x20\x08\x40\x4c", "ld4 {v0.4s, v1.4s, v2.4s, v3.4s}, [x1]"),
+    (b"\x20\x0c\x40\x4c", "ld4 {v0.2d, v1.2d, v2.2d, v3.2d}, [x1]"),
+    (b"\x20\x00\x40\x0c", "ld4 {v0.8b, v1.8b, v2.8b, v3.8b}, [x1]"),
+    (b"\x20\x04\x40\x0c", "ld4 {v0.4h, v1.4h, v2.4h, v3.4h}, [x1]"),
+    (b"\x20\x08\x40\x0c", "ld4 {v0.2s, v1.2s, v2.2s, v3.2s}, [x1]"),
+    (b"\x20\x00\xc2\x4c", "ld4 {v0.16b, v1.16b, v2.16b, v3.16b}, [x1], x2"),
+
+    (b"\x20\xe0\x60\x4d", "ld4r {v0.16b, v1.16b, v2.16b, v3.16b}, [x1]"),
+    (b"\x20\xe4\x60\x4d", "ld4r {v0.8h, v1.8h, v2.8h, v3.8h}, [x1]"),
+    (b"\x20\xe8\x60\x4d", "ld4r {v0.4s, v1.4s, v2.4s, v3.4s}, [x1]"),
+    (b"\x20\xec\x60\x4d", "ld4r {v0.2d, v1.2d, v2.2d, v3.2d}, [x1]"),
+    (b"\x20\xe0\x60\x0d", "ld4r {v0.8b, v1.8b, v2.8b, v3.8b}, [x1]"),
+    (b"\x20\xe4\x60\x0d", "ld4r {v0.4h, v1.4h, v2.4h, v3.4h}, [x1]"),
+    (b"\x20\xe8\x60\x0d", "ld4r {v0.2s, v1.2s, v2.2s, v3.2s}, [x1]"),
+    (b"\x20\xec\x60\x0d", "ld4r {v0.1d, v1.1d, v2.1d, v3.1d}, [x1]"),
+
+    (b"\x20\x1c\x22\x6e", "eor v0.16b, v1.16b, v2.16b"),
+    (b"\x20\x1c\x22\x2e", "eor v0.8b, v1.8b, v2.8b"),
+    (b"\x20\x1c\xa2\x4e", "orr v0.16b, v1.16b, v2.16b"),
+    (b"\x20\x1c\xa2\x0e", "orr v0.8b, v1.8b, v2.8b"),
+    (b"\x20\x1c\x22\x4e", "and v0.16b, v1.16b, v2.16b"),
+    (b"\x20\x1c\x22\x0e", "and v0.8b, v1.8b, v2.8b"),
 ]
 
 def emu_with_unicorn(opcode, istate):
@@ -1923,6 +2189,38 @@ def emu_with_unicorn(opcode, istate):
     mu.reg_write(UC_ARM64_REG_X28,  istate['x28'])
     mu.reg_write(UC_ARM64_REG_X29,  istate['x29'])
     mu.reg_write(UC_ARM64_REG_X30,  istate['x30'])
+    mu.reg_write(UC_ARM64_REG_V0,   istate['v0'])
+    mu.reg_write(UC_ARM64_REG_V1,   istate['v1'])
+    mu.reg_write(UC_ARM64_REG_V2,   istate['v2'])
+    mu.reg_write(UC_ARM64_REG_V3,   istate['v3'])
+    mu.reg_write(UC_ARM64_REG_V4,   istate['v4'])
+    mu.reg_write(UC_ARM64_REG_V5,   istate['v5'])
+    mu.reg_write(UC_ARM64_REG_V6,   istate['v6'])
+    mu.reg_write(UC_ARM64_REG_V7,   istate['v7'])
+    mu.reg_write(UC_ARM64_REG_V8,   istate['v8'])
+    mu.reg_write(UC_ARM64_REG_V9,   istate['v9'])
+    mu.reg_write(UC_ARM64_REG_V10,  istate['v10'])
+    mu.reg_write(UC_ARM64_REG_V11,  istate['v11'])
+    mu.reg_write(UC_ARM64_REG_V12,  istate['v12'])
+    mu.reg_write(UC_ARM64_REG_V13,  istate['v13'])
+    mu.reg_write(UC_ARM64_REG_V14,  istate['v14'])
+    mu.reg_write(UC_ARM64_REG_V15,  istate['v15'])
+    mu.reg_write(UC_ARM64_REG_V16,  istate['v16'])
+    mu.reg_write(UC_ARM64_REG_V17,  istate['v17'])
+    mu.reg_write(UC_ARM64_REG_V18,  istate['v18'])
+    mu.reg_write(UC_ARM64_REG_V19,  istate['v19'])
+    mu.reg_write(UC_ARM64_REG_V20,  istate['v20'])
+    mu.reg_write(UC_ARM64_REG_V21,  istate['v21'])
+    mu.reg_write(UC_ARM64_REG_V22,  istate['v22'])
+    mu.reg_write(UC_ARM64_REG_V23,  istate['v23'])
+    mu.reg_write(UC_ARM64_REG_V24,  istate['v24'])
+    mu.reg_write(UC_ARM64_REG_V25,  istate['v25'])
+    mu.reg_write(UC_ARM64_REG_V26,  istate['v26'])
+    mu.reg_write(UC_ARM64_REG_V27,  istate['v27'])
+    mu.reg_write(UC_ARM64_REG_V28,  istate['v28'])
+    mu.reg_write(UC_ARM64_REG_V29,  istate['v29'])
+    mu.reg_write(UC_ARM64_REG_V30,  istate['v30'])
+    mu.reg_write(UC_ARM64_REG_V31,  istate['v31'])
     mu.reg_write(UC_ARM64_REG_PC,   istate['pc'])
     mu.reg_write(UC_ARM64_REG_SP,   istate['sp'])
     mu.reg_write(UC_ARM64_REG_NZCV, istate['n'] << 31 | istate['z'] << 30 | istate['c'] << 29 | istate['v'] << 28)
@@ -1964,7 +2262,38 @@ def emu_with_unicorn(opcode, istate):
         "x28":   mu.reg_read(UC_ARM64_REG_X28),
         "x29":   mu.reg_read(UC_ARM64_REG_X29),
         "x30":   mu.reg_read(UC_ARM64_REG_X30),
-        "x30":   mu.reg_read(UC_ARM64_REG_X30),
+        "v0":    mu.reg_read(UC_ARM64_REG_V0),
+        "v1":    mu.reg_read(UC_ARM64_REG_V1),
+        "v2":    mu.reg_read(UC_ARM64_REG_V2),
+        "v3":    mu.reg_read(UC_ARM64_REG_V3),
+        "v4":    mu.reg_read(UC_ARM64_REG_V4),
+        "v5":    mu.reg_read(UC_ARM64_REG_V5),
+        "v6":    mu.reg_read(UC_ARM64_REG_V6),
+        "v7":    mu.reg_read(UC_ARM64_REG_V7),
+        "v8":    mu.reg_read(UC_ARM64_REG_V8),
+        "v9":    mu.reg_read(UC_ARM64_REG_V9),
+        "v10":   mu.reg_read(UC_ARM64_REG_V10),
+        "v11":   mu.reg_read(UC_ARM64_REG_V11),
+        "v12":   mu.reg_read(UC_ARM64_REG_V12),
+        "v13":   mu.reg_read(UC_ARM64_REG_V13),
+        "v14":   mu.reg_read(UC_ARM64_REG_V14),
+        "v15":   mu.reg_read(UC_ARM64_REG_V15),
+        "v16":   mu.reg_read(UC_ARM64_REG_V16),
+        "v17":   mu.reg_read(UC_ARM64_REG_V17),
+        "v18":   mu.reg_read(UC_ARM64_REG_V18),
+        "v19":   mu.reg_read(UC_ARM64_REG_V19),
+        "v20":   mu.reg_read(UC_ARM64_REG_V20),
+        "v21":   mu.reg_read(UC_ARM64_REG_V21),
+        "v22":   mu.reg_read(UC_ARM64_REG_V22),
+        "v23":   mu.reg_read(UC_ARM64_REG_V23),
+        "v24":   mu.reg_read(UC_ARM64_REG_V24),
+        "v25":   mu.reg_read(UC_ARM64_REG_V25),
+        "v26":   mu.reg_read(UC_ARM64_REG_V26),
+        "v27":   mu.reg_read(UC_ARM64_REG_V27),
+        "v28":   mu.reg_read(UC_ARM64_REG_V28),
+        "v29":   mu.reg_read(UC_ARM64_REG_V29),
+        "v30":   mu.reg_read(UC_ARM64_REG_V30),
+        "v31":   mu.reg_read(UC_ARM64_REG_V31),
         "pc":    mu.reg_read(UC_ARM64_REG_PC),
         "sp":    mu.reg_read(UC_ARM64_REG_SP),
         "n":   ((mu.reg_read(UC_ARM64_REG_NZCV) >> 31) & 1),
@@ -2014,6 +2343,38 @@ def emu_with_triton(opcode, istate):
     ctx.setConcreteRegisterValue(ctx.registers.x28, istate['x28'])
     ctx.setConcreteRegisterValue(ctx.registers.x29, istate['x29'])
     ctx.setConcreteRegisterValue(ctx.registers.x30, istate['x30'])
+    ctx.setConcreteRegisterValue(ctx.registers.v0,  istate['v0'])
+    ctx.setConcreteRegisterValue(ctx.registers.v1,  istate['v1'])
+    ctx.setConcreteRegisterValue(ctx.registers.v2,  istate['v2'])
+    ctx.setConcreteRegisterValue(ctx.registers.v3,  istate['v3'])
+    ctx.setConcreteRegisterValue(ctx.registers.v4,  istate['v4'])
+    ctx.setConcreteRegisterValue(ctx.registers.v5,  istate['v5'])
+    ctx.setConcreteRegisterValue(ctx.registers.v6,  istate['v6'])
+    ctx.setConcreteRegisterValue(ctx.registers.v7,  istate['v7'])
+    ctx.setConcreteRegisterValue(ctx.registers.v8,  istate['v8'])
+    ctx.setConcreteRegisterValue(ctx.registers.v9,  istate['v9'])
+    ctx.setConcreteRegisterValue(ctx.registers.v10, istate['v10'])
+    ctx.setConcreteRegisterValue(ctx.registers.v11, istate['v11'])
+    ctx.setConcreteRegisterValue(ctx.registers.v12, istate['v12'])
+    ctx.setConcreteRegisterValue(ctx.registers.v13, istate['v13'])
+    ctx.setConcreteRegisterValue(ctx.registers.v14, istate['v14'])
+    ctx.setConcreteRegisterValue(ctx.registers.v15, istate['v15'])
+    ctx.setConcreteRegisterValue(ctx.registers.v16, istate['v16'])
+    ctx.setConcreteRegisterValue(ctx.registers.v17, istate['v17'])
+    ctx.setConcreteRegisterValue(ctx.registers.v18, istate['v18'])
+    ctx.setConcreteRegisterValue(ctx.registers.v19, istate['v19'])
+    ctx.setConcreteRegisterValue(ctx.registers.v20, istate['v20'])
+    ctx.setConcreteRegisterValue(ctx.registers.v21, istate['v21'])
+    ctx.setConcreteRegisterValue(ctx.registers.v22, istate['v22'])
+    ctx.setConcreteRegisterValue(ctx.registers.v23, istate['v23'])
+    ctx.setConcreteRegisterValue(ctx.registers.v24, istate['v24'])
+    ctx.setConcreteRegisterValue(ctx.registers.v25, istate['v25'])
+    ctx.setConcreteRegisterValue(ctx.registers.v26, istate['v26'])
+    ctx.setConcreteRegisterValue(ctx.registers.v27, istate['v27'])
+    ctx.setConcreteRegisterValue(ctx.registers.v28, istate['v28'])
+    ctx.setConcreteRegisterValue(ctx.registers.v29, istate['v29'])
+    ctx.setConcreteRegisterValue(ctx.registers.v30, istate['v30'])
+    ctx.setConcreteRegisterValue(ctx.registers.v31, istate['v31'])
     ctx.setConcreteRegisterValue(ctx.registers.pc,  istate['pc'])
     ctx.setConcreteRegisterValue(ctx.registers.sp,  istate['sp'])
     ctx.setConcreteRegisterValue(ctx.registers.n,   istate['n'])
@@ -2063,7 +2424,38 @@ def emu_with_triton(opcode, istate):
         "x28":   ctx.getSymbolicRegisterValue(ctx.registers.x28),
         "x29":   ctx.getSymbolicRegisterValue(ctx.registers.x29),
         "x30":   ctx.getSymbolicRegisterValue(ctx.registers.x30),
-        "x30":   ctx.getSymbolicRegisterValue(ctx.registers.x30),
+        "v0":    ctx.getSymbolicRegisterValue(ctx.registers.v0),
+        "v1":    ctx.getSymbolicRegisterValue(ctx.registers.v1),
+        "v2":    ctx.getSymbolicRegisterValue(ctx.registers.v2),
+        "v3":    ctx.getSymbolicRegisterValue(ctx.registers.v3),
+        "v4":    ctx.getSymbolicRegisterValue(ctx.registers.v4),
+        "v5":    ctx.getSymbolicRegisterValue(ctx.registers.v5),
+        "v6":    ctx.getSymbolicRegisterValue(ctx.registers.v6),
+        "v7":    ctx.getSymbolicRegisterValue(ctx.registers.v7),
+        "v8":    ctx.getSymbolicRegisterValue(ctx.registers.v8),
+        "v9":    ctx.getSymbolicRegisterValue(ctx.registers.v9),
+        "v10":   ctx.getSymbolicRegisterValue(ctx.registers.v10),
+        "v11":   ctx.getSymbolicRegisterValue(ctx.registers.v11),
+        "v12":   ctx.getSymbolicRegisterValue(ctx.registers.v12),
+        "v13":   ctx.getSymbolicRegisterValue(ctx.registers.v13),
+        "v14":   ctx.getSymbolicRegisterValue(ctx.registers.v14),
+        "v15":   ctx.getSymbolicRegisterValue(ctx.registers.v15),
+        "v16":   ctx.getSymbolicRegisterValue(ctx.registers.v16),
+        "v17":   ctx.getSymbolicRegisterValue(ctx.registers.v17),
+        "v18":   ctx.getSymbolicRegisterValue(ctx.registers.v18),
+        "v19":   ctx.getSymbolicRegisterValue(ctx.registers.v19),
+        "v20":   ctx.getSymbolicRegisterValue(ctx.registers.v20),
+        "v21":   ctx.getSymbolicRegisterValue(ctx.registers.v21),
+        "v22":   ctx.getSymbolicRegisterValue(ctx.registers.v22),
+        "v23":   ctx.getSymbolicRegisterValue(ctx.registers.v23),
+        "v24":   ctx.getSymbolicRegisterValue(ctx.registers.v24),
+        "v25":   ctx.getSymbolicRegisterValue(ctx.registers.v25),
+        "v26":   ctx.getSymbolicRegisterValue(ctx.registers.v26),
+        "v27":   ctx.getSymbolicRegisterValue(ctx.registers.v27),
+        "v28":   ctx.getSymbolicRegisterValue(ctx.registers.v28),
+        "v29":   ctx.getSymbolicRegisterValue(ctx.registers.v29),
+        "v30":   ctx.getSymbolicRegisterValue(ctx.registers.v30),
+        "v31":   ctx.getSymbolicRegisterValue(ctx.registers.v31),
         "pc":    ctx.getSymbolicRegisterValue(ctx.registers.pc),
         "sp":    ctx.getSymbolicRegisterValue(ctx.registers.sp),
         "n":     ctx.getSymbolicRegisterValue(ctx.registers.n),
@@ -2119,7 +2511,38 @@ if __name__ == '__main__':
         "x28":   0,
         "x29":   0,
         "x30":   0,
-        "x30":   0,
+        "v0":    0x00112233445566778899aabbccddeeff,
+        "v1":    0xffeeddccbbaa99887766554433221100,
+        "v2":    0xfefedcdc5656787889892692dfeccaa0,
+        "v3":    0x1234567890987654321bcdffccddee01,
+        "v4":    0,
+        "v5":    0,
+        "v6":    0,
+        "v7":    0,
+        "v8":    0,
+        "v9":    0,
+        "v10":   0,
+        "v11":   0,
+        "v12":   0,
+        "v13":   0,
+        "v14":   0,
+        "v15":   0,
+        "v16":   0,
+        "v17":   0,
+        "v18":   0,
+        "v19":   0,
+        "v20":   0,
+        "v21":   0,
+        "v22":   0,
+        "v23":   0,
+        "v24":   0,
+        "v25":   0,
+        "v26":   0,
+        "v27":   0,
+        "v28":   0,
+        "v29":   0,
+        "v30":   0,
+        "v31":   0,
         "pc":    ADDR,
         "sp":    STACK,
         "n":     0,

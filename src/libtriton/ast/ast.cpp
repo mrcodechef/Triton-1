@@ -2671,7 +2671,12 @@ namespace triton {
 
 
     void IntegerNode::initHash(void) {
-      this->hash = static_cast<triton::uint64>(this->type) ^ this->value;
+      static const triton::uint512 even_flag = (triton::uint512(1) << 64) | 1;
+      if ((this->value & 1) == 0) {
+        this->hash = static_cast<triton::uint64>(this->type) ^ this->value;
+      } else {
+        this->hash = static_cast<triton::uint64>(this->type) ^ this->value ^ (even_flag);
+      }
     }
 
 
@@ -2711,8 +2716,14 @@ namespace triton {
       /* Init children and spread information */
       for (triton::uint32 index = 0; index < this->children.size(); index++) {
         this->children[index]->setParent(this);
-        this->symbolized |= this->children[index]->isSymbolized();
         this->level = std::max(this->children[index]->getLevel() + 1, this->level);
+      }
+
+      /* Spread symbolic information */
+      if (!this->children[0]->isSymbolized()) {
+        this->symbolized = this->children[0]->evaluate() ? this->children[1]->isSymbolized() : this->children[2]->isSymbolized();
+      } else {
+        this->symbolized = true;
       }
 
       /* Init parents if needed */
@@ -3473,7 +3484,7 @@ namespace triton {
     triton::uint512 rotl(const triton::uint512& value, triton::uint32 shift) {
       if ((shift &= 511) == 0)
         return value;
-      return ((value << shift) | (value >> (512 - shift)));
+      return ((value << shift) | (value >> (512 - shift))) | 1;
     }
 
 

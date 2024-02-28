@@ -8,6 +8,8 @@
 #ifndef TRITON_ARMOPERANDPROPERTIES
 #define TRITON_ARMOPERANDPROPERTIES
 
+#include <string>
+
 #include <triton/archEnums.hpp>
 #include <triton/dllexport.hpp>
 #include <triton/tritonTypes.hpp>
@@ -54,6 +56,12 @@ namespace triton {
           //! The extend type.
           triton::arch::arm::extend_e extendType;
 
+          //! Vector arrangement specifier.
+          triton::arch::arm::vas_e vasType;
+
+          //! Vector index (-1 if irrelevant).
+          triton::sint32 vectorIndex;
+
           //! The extend size (in bits).
           triton::uint32 extendSize;
 
@@ -79,6 +87,18 @@ namespace triton {
           //! Returns the type of the extend.
           TRITON_EXPORT triton::arch::arm::extend_e getExtendType(void) const;
 
+          //! Returns the vector arrangement specifier.
+          TRITON_EXPORT triton::arch::arm::vas_e getVASType(void) const;
+
+          //! Returns the vector index (-1 if irrelevant).
+          TRITON_EXPORT triton::sint32 getVectorIndex(void) const;
+
+          //! Returns the vector arrangement specifier string name.
+          TRITON_EXPORT std::string getVASName(void) const;
+
+          //! Returns the vector arrangement specifier size (64 or 128 bits).
+          TRITON_EXPORT triton::uint32 getVASSize(void) const;
+
           //! Returns the size (in bits) of the extend.
           TRITON_EXPORT triton::uint32 getExtendSize(void) const;
 
@@ -97,8 +117,14 @@ namespace triton {
           //! Sets the type of the extend.
           TRITON_EXPORT void setExtendType(triton::arch::arm::extend_e type);
 
+          //! Sets the type of vector arrangement specifier.
+          TRITON_EXPORT void setVASType(triton::arch::arm::vas_e type);
+
           //! Sets the extended size (in bits) after extension.
           TRITON_EXPORT void setExtendedSize(triton::uint32 dstSize);
+
+          //! Sets the vector index.
+          TRITON_EXPORT void setVectorIndex(triton::sint32 index);
 
           //! Sets subtracted flag.
           TRITON_EXPORT void setSubtracted(bool value);

@@ -31,10 +31,11 @@ namespace triton {
                                                         AARCH64_UPPER,                                      \
                                                         AARCH64_LOWER,                                      \
                                                         MUTABLE)                                            \
-                                );                                                                          \
+                            );                                                                              \
               name2id.emplace(#LOWER_NAME, ID_REG_AARCH64_##UPPER_NAME);
             // Handle register not available in capstone as normal registers
             #define REG_SPEC_NO_CAPSTONE REG_SPEC
+            #define SYS_REG_SPEC REG_SPEC
             #include "triton/aarch64.spec"
         }
 
@@ -44,10 +45,18 @@ namespace triton {
 
           switch (id) {
             // Convert registers from capstone value to triton value
-            #define REG_SPEC(UPPER_NAME, _1, _2, _3, _4, _5)        \
-            case triton::extlibs::capstone::ARM64_REG_##UPPER_NAME: \
-              tritonId = triton::arch::ID_REG_AARCH64_##UPPER_NAME; \
+            #define REG_SPEC(UPPER_NAME, _1, _2, _3, _4, _5)           \
+            case triton::extlibs::capstone::ARM64_REG_##UPPER_NAME:    \
+              tritonId = triton::arch::ID_REG_AARCH64_##UPPER_NAME;    \
               break;
+            #if CS_API_MAJOR >= 5
+            #define SYS_REG_SPEC(UPPER_NAME, _1, _2, _3, _4, _5)       \
+            case triton::extlibs::capstone::ARM64_SYSREG_##UPPER_NAME: \
+              tritonId = triton::arch::ID_REG_AARCH64_##UPPER_NAME;    \
+              break;
+            #else
+            #define SYS_REG_SPEC(_1, _2, _3, _4, _5, _6)
+            #endif
             // Ignore registers not available in capstone
             #define REG_SPEC_NO_CAPSTONE(_1, _2, _3, _4, _5, _6)
             #include "triton/aarch64.spec"
@@ -136,6 +145,55 @@ namespace triton {
 
             default:
               tritonId = triton::arch::arm::ID_EXTEND_INVALID;
+              break;
+          }
+
+          return tritonId;
+        }
+
+
+        triton::arch::arm::vas_e AArch64Specifications::capstoneVASToTritonVAS(triton::uint32 id) const {
+          triton::arch::arm::vas_e tritonId = triton::arch::arm::ID_VAS_INVALID;
+
+          switch (id) {
+            case triton::extlibs::capstone::ARM64_VAS_INVALID:
+              tritonId = triton::arch::arm::ID_VAS_INVALID;
+              break;
+
+            case triton::extlibs::capstone::ARM64_VAS_16B:
+              tritonId = triton::arch::arm::ID_VAS_16B;
+              break;
+
+            case triton::extlibs::capstone::ARM64_VAS_8B:
+              tritonId = triton::arch::arm::ID_VAS_8B;
+              break;
+
+            case triton::extlibs::capstone::ARM64_VAS_8H:
+              tritonId = triton::arch::arm::ID_VAS_8H;
+              break;
+
+            case triton::extlibs::capstone::ARM64_VAS_4H:
+              tritonId = triton::arch::arm::ID_VAS_4H;
+              break;
+
+            case triton::extlibs::capstone::ARM64_VAS_4S:
+              tritonId = triton::arch::arm::ID_VAS_4S;
+              break;
+
+            case triton::extlibs::capstone::ARM64_VAS_2S:
+              tritonId = triton::arch::arm::ID_VAS_2S;
+              break;
+
+            case triton::extlibs::capstone::ARM64_VAS_2D:
+              tritonId = triton::arch::arm::ID_VAS_2D;
+              break;
+
+            case triton::extlibs::capstone::ARM64_VAS_1D:
+              tritonId = triton::arch::arm::ID_VAS_1D;
+              break;
+
+            default:
+              tritonId = triton::arch::arm::ID_VAS_INVALID;
               break;
           }
 
@@ -235,6 +293,12 @@ namespace triton {
             case triton::extlibs::capstone::ARM64_INS_ADC:
               tritonId = triton::arch::arm::aarch64::ID_INS_ADC;
               break;
+
+            #if CS_API_MAJOR >= 5
+            case triton::extlibs::capstone::ARM64_INS_ADCS:
+              tritonId = triton::arch::arm::aarch64::ID_INS_ADC;
+              break;
+            #endif
 
             case triton::extlibs::capstone::ARM64_INS_ADDHN:
               tritonId = triton::arch::arm::aarch64::ID_INS_ADDHN;
@@ -1168,6 +1232,12 @@ namespace triton {
               tritonId = triton::arch::arm::aarch64::ID_INS_SBC;
               break;
 
+            #if CS_API_MAJOR >= 5
+            case triton::extlibs::capstone::ARM64_INS_SBCS:
+              tritonId = triton::arch::arm::aarch64::ID_INS_SBC;
+              break;
+            #endif
+
             case triton::extlibs::capstone::ARM64_INS_SBFM:
               tritonId = triton::arch::arm::aarch64::ID_INS_SBFM;
               break;
@@ -2067,25 +2137,36 @@ namespace triton {
             case ID_INS_LDAXRB:
             case ID_INS_LDRB:
             case ID_INS_LDRSB:
+            case ID_INS_LDTRB:
+            case ID_INS_LDTRSB:
             case ID_INS_LDURB:
             case ID_INS_LDURSB:
             case ID_INS_LDXRB:
             case ID_INS_STLRB:
+            case ID_INS_STLXRB:
             case ID_INS_STRB:
+            case ID_INS_STTRB:
             case ID_INS_STURB:
+            case ID_INS_STXRB:
               return 1;
             case ID_INS_LDARH:
             case ID_INS_LDAXRH:
             case ID_INS_LDRH:
             case ID_INS_LDRSH:
+            case ID_INS_LDTRH:
+            case ID_INS_LDTRSH:
             case ID_INS_LDURH:
             case ID_INS_LDURSH:
             case ID_INS_LDXRH:
             case ID_INS_STLRH:
+            case ID_INS_STLXRH:
             case ID_INS_STRH:
+            case ID_INS_STTRH:
             case ID_INS_STURH:
+            case ID_INS_STXRH:
               return 2;
             case ID_INS_LDRSW:
+            case ID_INS_LDTRSW:
             case ID_INS_LDURSW:
               return 4;
             default:

@@ -21,7 +21,7 @@
 
 /*!
 
-\mainpage Triton: Dynamic Binary Analysis Framework
+\mainpage Triton: A dynamic binary analysis library
 
 \tableofcontents
 
@@ -347,6 +347,11 @@ namespace triton {
   const std::unordered_map<triton::arch::register_e, const triton::arch::Register>& Context::getAllRegisters(void) const {
     this->checkArchitecture();
     return this->arch.getAllRegisters();
+  }
+
+  const std::unordered_map<triton::uint64, triton::uint8, IdentityHash<triton::uint64>>& Context::getConcreteMemory(void) const {
+    this->checkArchitecture();
+    return this->arch.getConcreteMemory();
   }
 
 

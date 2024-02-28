@@ -85,11 +85,11 @@ namespace triton {
         //! Sets CPU state to Thumb mode. Only valid for Arm32.
         TRITON_EXPORT void setThumb(bool state);
 
-        //! Returns true if the exclusive memory access flag is set. Only valid for Arm32.
-        TRITON_EXPORT bool isMemoryExclusiveAccess(void) const;
+        //! Returns true if the memory access is tagged as exclusive. Only valid for Arm32 and AArch64.
+        TRITON_EXPORT bool isMemoryExclusive(const triton::arch::MemoryAccess& mem) const;
 
-        //! Sets exclusive memory access flag. Only valid for Arm32.
-        TRITON_EXPORT void setMemoryExclusiveAccess(bool state);
+        //! Sets exclusive memory access tag. Only valid for Arm32 and AArch64.
+        TRITON_EXPORT void setMemoryExclusiveTag(const triton::arch::MemoryAccess& mem, bool tag);
 
         //! Returns the kind of architecture as triton::arch::architecture_e.
         TRITON_EXPORT triton::arch::architecture_e getArchitecture(void) const;
@@ -117,6 +117,9 @@ namespace triton {
 
         //! Returns all registers.
         TRITON_EXPORT const std::unordered_map<triton::arch::register_e, const triton::arch::Register>& getAllRegisters(void) const;
+
+        //! Return all memory.
+        TRITON_EXPORT const std::unordered_map<triton::uint64, triton::uint8, IdentityHash<triton::uint64>>& getConcreteMemory(void) const;
 
         //! Returns all parent registers.
         TRITON_EXPORT std::set<const triton::arch::Register*> getParentRegisters(void) const;

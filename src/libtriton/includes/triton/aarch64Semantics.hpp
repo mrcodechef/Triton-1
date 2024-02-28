@@ -207,6 +207,9 @@ namespace triton {
             //! The BR semantics.
             void br_s(triton::arch::Instruction& inst);
 
+            //! The BRK semantics.
+            void brk_s(triton::arch::Instruction& inst);
+
             //! The CBNZ semantics
             void cbnz_s(triton::arch::Instruction& inst);
 
@@ -227,6 +230,9 @@ namespace triton {
 
             //! The CMP semantics
             void cmp_s(triton::arch::Instruction& inst);
+
+            //! The CNEG semantics
+            void cneg_s(triton::arch::Instruction& inst);
 
             //! The CSEL semantics
             void csel_s(triton::arch::Instruction& inst);
@@ -249,6 +255,18 @@ namespace triton {
             //! The EXTR semantics.
             void extr_s(triton::arch::Instruction& inst);
 
+            //! The LD3 semantics.
+            void ld3_s(triton::arch::Instruction& inst);
+
+            //! The LD3R semantics.
+            void ld3r_s(triton::arch::Instruction& inst);
+
+            //! The LD4 semantics.
+            void ld4_s(triton::arch::Instruction& inst);
+
+            //! The LD4R semantics.
+            void ld4r_s(triton::arch::Instruction& inst);
+
             //! The LDAR semantics.
             void ldar_s(triton::arch::Instruction& inst);
 
@@ -267,8 +285,14 @@ namespace triton {
             //! The LDAXRH semantics.
             void ldaxrh_s(triton::arch::Instruction& inst);
 
+            //! The LDNP semantics.
+            void ldnp_s(triton::arch::Instruction& inst);
+
             //! The LDP semantics.
             void ldp_s(triton::arch::Instruction& inst);
+
+            //! The LDPSW semantics.
+            void ldpsw_s(triton::arch::Instruction& inst);
 
             //! The LDR semantics.
             void ldr_s(triton::arch::Instruction& inst);
@@ -288,6 +312,24 @@ namespace triton {
             //! The LDRSW semantics.
             void ldrsw_s(triton::arch::Instruction& inst);
 
+            //! The LDTR semantics.
+            void ldtr_s(triton::arch::Instruction& inst);
+
+            //! The LDTRB semantics.
+            void ldtrb_s(triton::arch::Instruction& inst);
+
+            //! The LDTRH semantics.
+            void ldtrh_s(triton::arch::Instruction& inst);
+
+            //! The LDTRSB semantics.
+            void ldtrsb_s(triton::arch::Instruction& inst);
+
+            //! The LDTRSH semantics.
+            void ldtrsh_s(triton::arch::Instruction& inst);
+
+            //! The LDTRSW semantics.
+            void ldtrsw_s(triton::arch::Instruction& inst);
+
             //! The LDUR semantics.
             void ldur_s(triton::arch::Instruction& inst);
 
@@ -305,6 +347,9 @@ namespace triton {
 
             //! The LDURSW semantics.
             void ldursw_s(triton::arch::Instruction& inst);
+
+            //! The LDXP semantics.
+            void ldxp_s(triton::arch::Instruction& inst);
 
             //! The LDXR semantics.
             void ldxr_s(triton::arch::Instruction& inst);
@@ -330,6 +375,9 @@ namespace triton {
             //! The MOV semantics.
             void mov_s(triton::arch::Instruction& inst);
 
+            //! The MOVI semantics.
+            void movi_s(triton::arch::Instruction& inst);
+
             //! The MOVK semantics.
             void movk_s(triton::arch::Instruction& inst);
 
@@ -338,6 +386,12 @@ namespace triton {
 
             //! The MOVZ semantics.
             void movz_s(triton::arch::Instruction& inst);
+
+            //! The MRS semantics.
+            void mrs_s(triton::arch::Instruction& inst);
+
+            //! The MSR semantics.
+            void msr_s(triton::arch::Instruction& inst);
 
             //! The MSUB semantics.
             void msub_s(triton::arch::Instruction& inst);
@@ -378,6 +432,9 @@ namespace triton {
             //! The ROR semantics.
             void ror_s(triton::arch::Instruction& inst);
 
+            //! The SBC semantics.
+            void sbc_s(triton::arch::Instruction& inst);
+
             //! The SBFX semantics.
             void sbfx_s(triton::arch::Instruction& inst);
 
@@ -405,6 +462,18 @@ namespace triton {
             //! The STLRH semantics.
             void stlrh_s(triton::arch::Instruction& inst);
 
+            //! The STLXR semantics.
+            void stlxr_s(triton::arch::Instruction& inst);
+
+            //! The STLXRB semantics.
+            void stlxrb_s(triton::arch::Instruction& inst);
+
+            //! The STLXRH semantics.
+            void stlxrh_s(triton::arch::Instruction& inst);
+
+            //! The STNP semantics.
+            void stnp_s(triton::arch::Instruction& inst);
+
             //! The STP semantics.
             void stp_s(triton::arch::Instruction& inst);
 
@@ -417,6 +486,15 @@ namespace triton {
             //! The STRH semantics.
             void strh_s(triton::arch::Instruction& inst);
 
+            //! The STTR semantics.
+            void sttr_s(triton::arch::Instruction& inst);
+
+            //! The STTRB semantics.
+            void sttrb_s(triton::arch::Instruction& inst);
+
+            //! The STTRH semantics.
+            void sttrh_s(triton::arch::Instruction& inst);
+
             //! The STUR semantics.
             void stur_s(triton::arch::Instruction& inst);
 
@@ -425,6 +503,18 @@ namespace triton {
 
             //! The STURH semantics.
             void sturh_s(triton::arch::Instruction& inst);
+
+            //! The STXP semantics.
+            void stxp_s(triton::arch::Instruction& inst);
+
+            //! The STXR semantics.
+            void stxr_s(triton::arch::Instruction& inst);
+
+            //! The STXRB semantics.
+            void stxrb_s(triton::arch::Instruction& inst);
+
+            //! The STXRH semantics.
+            void stxrh_s(triton::arch::Instruction& inst);
 
             //! The SUB semantics.
             void sub_s(triton::arch::Instruction& inst);
